@@ -1,4 +1,7 @@
+# This is archlinux' PKGBUILD for [nix-bash-completions](https://github.com/hedning/nix-bash-completions)
+
 # nix-bash-completions
+
 Bash completion for the [Nix](https://nixos.org/nix/) and [NixOS](https://nixos.org/) command line tools.
 
 The aim is full completion support for every argument, option and option argument, as long as everything that's needed is available locally. For instance when accessing a nixpkgs repo through an url, and it has been previously downloaded, completion should be offered using the local copy. Any behavior which doesn't agree with the actual execution of the command is considered a bug. Issues are very welcome as I primarily use zsh and therefor won't catch that many bugs through daily usage.
@@ -13,7 +16,7 @@ Some arguments support several types of input, but due to bash's limited complet
 
 ### Completing attribute paths to packages
 
-The preferred way to reference a package in Nix is by attribute path, not by name. Attribute paths look like this `nixos.mplayer` or `nixos.gnome.gedit`, where `nixos` is a collection of all packages. If `<tab>` results in eg. something like `nixos` you'll need to manually add a `.` to access the packages available in `nixos`. 
+The preferred way to reference a package in Nix is by attribute path, not by name. Attribute paths look like this `nixos.mplayer` or `nixos.gnome.gedit`, where `nixos` is a collection of all packages. If `<tab>` results in eg. something like `nixos` you'll need to manually add a `.` to access the packages available in `nixos`.
 
 When using `nix-env` it's best to always add the `--attr` or `-A` flag as `nix-env` defaults to looking up packages by name which aren't completed fully (this is a legacy problem, the new `nix` command only works on attribute paths by default).
 
@@ -29,9 +32,10 @@ Completion should work out of the box from 18.09 and onwards. If it's not workin
 
 You need [bash-completion](https://github.com/scop/bash-completion) setup correctly. Installing the `bash-completion` package with the native package manager should probably do the trick.
 
-Then you can install `nix-bash-completions` from the cloned git repo with `nix-env -i -f default.nix`, or from nixpkgs eg. `nix-env -f '<nixpkgs>  -iA nix-bash-completions'`.
+Then you can install `nix-bash-completions` from the cloned git repo with `nix-env -i -f default.nix`, or from nixpkgs eg. `nix-env -f '<nixpkgs> -iA nix-bash-completions'`.
 
-Make sure that `$XDG_DATA_DIRS` includes `~/.nix-profile/share`, which will tell `bash-completion` where to find the script when completion is done.  Be careful though: make sure that `$XDG_DATA_DIRS` also includes your distribution's defaults (like `/usr/local/share/:/usr/share/`), or you may not be able to launch some applications from the console. Adding this to your `.bashrc` should work in general:
+Make sure that `$XDG_DATA_DIRS` includes `~/.nix-profile/share`, which will tell `bash-completion` where to find the script when completion is done. Be careful though: make sure that `$XDG_DATA_DIRS` also includes your distribution's defaults (like `/usr/local/share/:/usr/share/`), or you may not be able to launch some applications from the console. Adding this to your `.bashrc` should work in general:
+
 ```bash
 export XDG_DATA_DIRS="$HOME/.nix-profile/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 ```
@@ -47,11 +51,13 @@ You might also need to copy or link the installed files in `~/.nix-profile/share
 The script runs on top of `_parse` which is a bare bones implementation of zsh's [`_arguments`](http://zsh.sourceforge.net/Doc/Release/Completion-System.html#index-_005farguments) with some minor modifications to the syntax, and a bunch of stuff not implemented. A brief description of the `_parse` syntax follows, for anyone interested in reading the code, or using `_parse` for other completion scripts.
 
 ### `_parse` syntax
+
 `_parse` takes as arguments specifications of options and normal arguments.
 
 The spec looks like this at the moment (`[]` denotes optional syntax):
 
 Argument spec:
+
 - `:action`
 
 Argument specs tell `_parse` how to handle normal arguments (arguments not required by options). The first argument will be handled by the first `:action` passed to `_parse`, the second by the second argument spec passed, and so on. Actions starting with a `*` will handle all further arguments. `_parse` puts all the encountered normal arguments in the array `$line` for easy lookup when handling further completion.
@@ -66,6 +72,7 @@ When completing an argument with a `->string` action `_parse` will set `$state` 
 The `[*]_function_` spec causes `_function` to be called, making it handle completion. At the moment this isn't that useful as passing options to `_function` isn't supported. `->string` actions together with a case statement is much more flexible.
 
 An example using the different actions:
+
 ```shell
 local state
 local -a line
@@ -76,21 +83,25 @@ case "$state" in
         COMPREPLY=($(compgen -f $cur))
 esac
 ```
+
 Here the function `_known_hosts` will handle completion for the first argument and then all further arguments will complete files through the `$state` case.
 
 The options spec have a few more pieces on top of actions:
+
 - `[(pattern|pattern ...)][*]--option[:action[:action2] ... ]`
 
 The simplest case just being:
+
 - `--option`
 
 Which tells `_parse` to add `--option` when completing options.
 
 If the option is present on the command line further option completion will exclude options matching any of the `pattern`s. By default `--option` will exclude itself. If we want an option to be repeatable we add the `*` prefix to the option.
 
-Adding actions to an option spec tells `_parse` that the option takes arguments. These actions are specified in the exact same way as the argument spec. Option arguments can later be looked up in the `$opt_args` associative array using the option as a key. The presence of __any__ option can be checked with `${opts[option]}`.
+Adding actions to an option spec tells `_parse` that the option takes arguments. These actions are specified in the exact same way as the argument spec. Option arguments can later be looked up in the `$opt_args` associative array using the option as a key. The presence of **any** option can be checked with `${opts[option]}`.
 
 A reduced version of `nix-shell` spec:
+
 ```shell
 local state
 local -a line
